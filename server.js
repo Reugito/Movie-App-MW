@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = process.env.PORT || 2000;
+const port = process.env.PORT || 8085;
 
 // Import the models and db URL
 const dbConfig = require('./config/db.config');
@@ -44,10 +44,10 @@ mongoose
   });
 
 // Use the imported routes
-app.use('/api/movies', movieRoutes);
-app.use('/api/genres', genreRoutes);
-app.use('/api/artists', artistRoutes);
-app.use('/api/auth', userRoutes);
+app.use('/api', movieRoutes);
+app.use('/api', genreRoutes);
+app.use('/api', artistRoutes);
+app.use('/api', userRoutes);
 
 // Start the server
 app.listen(port, () => {

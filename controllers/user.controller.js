@@ -1,6 +1,7 @@
 const User = require('../models/user.model');
-const uuidv4 = require('uuidv4');
+const { v4: uuidv4 } = require('uuid');
 const TokenGenerator = require('uuid-token-generator');
+const Joi = require('joi'); // Import Joi for validation
 
 
 // Create a token generator with a specific secret key
@@ -8,29 +9,48 @@ const tokenGenerator = new TokenGenerator();
 
 // Sign up a new user
 exports.signUp = (req, res) => {
-  const { email, first_name, last_name, registerPassword, contact } = req.body;
-  
+  const { email_address, first_name, last_name, password, mobile_number } = req.body;
+
+  // Define the validation schema for user registration
+  const userValidationSchema = Joi.object({
+    email_address: Joi.string().email().required(),
+    first_name: Joi.string().required(),
+    last_name: Joi.string().required(),
+    password: Joi.string().required(),
+    mobile_number: Joi.string(), // Optional field
+  });
+
+  // Validate user data against the schema
+  const { error } = userValidationSchema.validate(req.body);
+
+  if (error) {
+    return res.sendError(400, error.details[0].message);
+  }
+
   // Generate a UUID for the user
   const uuid = uuidv4();
 
   // Create a new user object
   const newUser = new User({
-    email,
+    first_name,
+    last_name,
+    contact: mobile_number, // Using the provided mobile_number
+    email:email_address, // Using the provided email
+    password,
     username: `${first_name}_${last_name}`, // Change this as needed
     uuid,
-    access_token: tokenGenerator.generate(uuid),
+    accesstoken: tokenGenerator.generate(uuid), // Assuming tokenGenerator is defined elsewhere
     isLoggedIn: false,
-    // Add other user properties as needed
   });
 
   // Save the user to the database
   newUser
     .save()
     .then(() => {
-      res.status(201).json({ message: 'User created successfully' });
+      res.sendSuccess('User created successfully');
     })
     .catch((err) => {
-      res.status(500).json({ message: err.message });
+      res.sendError(500,err.message)
     });
 };
 
@@ -39,7 +59,7 @@ exports.login = (req, res) => {
   const { username, password } = req.body;
 
   // Find the user by username and password
-  User.findOne({ username, password })
+  User.findOne({ email:username, password })
     .then((user) => {
       if (user) {
         // Update the user's isLoggedIn status

@@ -8,7 +8,7 @@ const tokenGenerator = new TokenGenerator();
 
 // Sign up a new user
 exports.signUp = (req, res) => {
-  const { email, first_name, last_name, password } = req.body;
+  const { email, first_name, last_name, registerPassword, contact } = req.body;
   
   // Generate a UUID for the user
   const uuid = uuidv4();
@@ -77,9 +77,6 @@ exports.logout = (req, res) => {
       res.status(500).json({ message: err.message });
     });
 };
-
-
-// ... (previous code)
 
 // Get coupon code for a user
 exports.getCouponCode = (req, res) => {

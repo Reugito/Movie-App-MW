@@ -6,7 +6,7 @@ exports.findAllMovies = (req, res) => {
 
   Movie.find({ status })
     .then((movies) => {
-      res.sendSuccess(movies);
+      res.sendSuccess({movies:movies});
     })
     .catch((err) => {
       res.sendError(500, err.message);

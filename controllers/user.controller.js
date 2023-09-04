@@ -57,6 +57,7 @@ exports.signUp = (req, res) => {
 // Log in a user
 exports.login = (req, res) => {
   const { username, password } = req.body;
+  console.log(username, password)
 
   // Find the user by username and password
   User.findOne({ email:username, password })
@@ -66,8 +67,11 @@ exports.login = (req, res) => {
         user.isLoggedIn = true;
         user.save();
 
-        res.status(200).json({ message: 'Login successful', access_token: user.access_token });
+
+        res.header('access-token', user.access_token)
+        res.sendSuccess({ message: 'Login successful', access_token: user.access_token });
       } else {
+        
         res.status(401).json({ message: 'Login failed. Invalid username or password.' });
       }
     })
@@ -78,10 +82,10 @@ exports.login = (req, res) => {
 
 // Log out a user
 exports.logout = (req, res) => {
-  const { userId } = req.params;
+  const { uuid } = req.params;
 
   // Find the user by their unique ID
-  User.findOne({ uuid: userId })
+  User.findOne({ uuid: uuid })
     .then((user) => {
       if (user) {
         // Update the user's isLoggedIn status

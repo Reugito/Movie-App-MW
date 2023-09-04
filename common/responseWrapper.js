@@ -2,7 +2,8 @@
 const responseWrapper = (req, res, next) => {
     // Create a function to send success responses
     res.sendSuccess = (data) => {
-      res.status(200).json({ success: true, data });
+      console.log(data)
+      res.status(200).json(data);
     };
   
     // Create a function to send error responses

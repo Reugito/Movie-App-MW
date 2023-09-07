@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Joi = require('joi');
 
 const UserSchema = mongoose.Schema({
+  userid: String,
   username: String,
   email: {
     required: true,
@@ -12,6 +13,7 @@ const UserSchema = mongoose.Schema({
   last_name: String,
   contact: String,
   password: String,
+  role: String,
   isLoggedIn: Boolean,
   uuid: {
     required: true,

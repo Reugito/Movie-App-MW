@@ -57,7 +57,16 @@ exports.signUp = (req, res) => {
 // Log in a user
 exports.login = (req, res) => {
   const { username, password } = req.body;
-  console.log(username, password)
+  const userValidationSchema = Joi.object({
+    username: Joi.string().email().required(),
+    password: Joi.string().required(),
+  });
+
+  // Validate user data against the schema
+  const { error } = userValidationSchema.validate(req.body);
+  if (error) {
+    return res.sendError(400, error.details[0].message);
+  }
 
   // Find the user by username and password
   User.findOne({ email:username, password })
@@ -69,7 +78,7 @@ exports.login = (req, res) => {
 
 
         res.header('access-token', user.access_token)
-        res.sendSuccess({ message: 'Login successful', access_token: user.access_token });
+        res.sendSuccess({ message: 'Login successful', id: user.uuid });
       } else {
         
         res.status(401).json({ message: 'Login failed. Invalid username or password.' });
@@ -82,7 +91,16 @@ exports.login = (req, res) => {
 
 // Log out a user
 exports.logout = (req, res) => {
-  const { uuid } = req.params;
+  const { uuid } = req.body;
+  const userValidationSchema = Joi.object({
+    uuid: Joi.string().required(),
+  });
+
+  // Validate user data against the schema
+  const { error } = userValidationSchema.validate(req.body);
+  if (error) {
+    return res.sendError(400, error.details[0].message);
+  }
 
   // Find the user by their unique ID
   User.findOne({ uuid: uuid })
@@ -92,7 +110,7 @@ exports.logout = (req, res) => {
         user.isLoggedIn = false;
         user.save();
 
-        res.status(200).json({ message: 'Logout successful' });
+        res.status(200).json({ message: 'Logged Out successfully.' });
       } else {
         res.status(404).json({ message: 'User not found' });
       }
@@ -163,4 +181,71 @@ exports.getCouponCode = (req, res) => {
         res.status(500).json({ message: err.message });
       });
   };
+
+
+  function addUsers(){
+    User.insertMany([
+      {
+         "userid": 1,
+         "email":"a@b.com", 
+         "first_name": "user1", 
+         "last_name": "user1", 
+         "username":"test",
+         "contact":"9898989898", 
+         "password":"test@123",
+         "role":"user", 
+         "isLoggedIn": false, 
+         "uuid":"5555", 
+         "accesstoken":"66666",
+         "coupens":[
+            {
+               "id":101,discountValue: 101 
+            },
+            {"id":102,discountValue: 102 
+            }
+         ],
+         "bookingRequests":[
+            {
+               "reference_number":29783,
+               "coupon_code":101,show_id: 1003,tickets:[1,3]
+            },
+            {
+               "reference_number":19009,
+               "coupon_code":201,show_id: 1002,tickets:[1]
+            }
+         ]
+      },
+      {
+         "userid": 2,
+         "email":"p@q.com", 
+         "first_name": "user2", 
+         "last_name": "user2", 
+         "username":"user", 
+         "contact":"9898989898", 
+         "password":"user@123",
+         "role":"admin", 
+         "isLoggedIn": false, 
+         "uuid":"11122", 
+         "accesstoken":"2211",
+         "coupens":[
+            {
+               "id":103,discountValue: 103 
+            },
+            {
+               "id":104,discountValue: 104 
+            }
+         ],
+         "bookingRequests":[
+            {
+               "reference_number":29783,
+               "coupon_code":101,show_id: 1003,tickets:[1,3]
+            },
+          {
+               "reference_number":19009,
+               "coupon_code":201,show_id: 1002,tickets:[1]
+            }
+         ]
+      }
+   ])
+  }
   

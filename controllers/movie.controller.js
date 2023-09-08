@@ -1,7 +1,6 @@
 const Movie = require('../models/movie.model');
 exports.findAllMovies = (req, res) => {
   const { status, title, genres, artists, start_date, end_date } = req.query;
-
   // Build the query object based on the provided parameters
   let query = {};
   query.released = false;
@@ -48,10 +47,10 @@ exports.findOne = (req, res) => {
 
   Movie.findOne({movieid:movieId})
     .then((movie) => {
-      res.json(movie);
+      res.json([movie]);
     })
     .catch((err) => {
-      res.status(500).json({ message: err.message });
+      res.sendError(500, err.message);;
     });
 };
 

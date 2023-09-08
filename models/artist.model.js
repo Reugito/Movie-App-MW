@@ -6,7 +6,7 @@ const ArtistSchema = mongoose.Schema({
   last_name: String,
   wiki_url: String,
   profile_url: String,
-  movies: [String], // This can be modified based on your requirements
+  movies: [Object], // This can be modified based on your requirements
 });
 
 module.exports = mongoose.model('Artist', ArtistSchema);

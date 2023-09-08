@@ -6,7 +6,6 @@ const port = process.env.PORT || 8085;
 // Import the models and db URL
 const dbConfig = require('./config/db.config');
 const mongoose = require('mongoose'); // Import Mongoose
-const autoIncrement = require('mongoose-auto-increment');
 
 // Middleware
 app.use(cors());
@@ -42,7 +41,7 @@ mongoose
     console.log('Cannot connect to the database!', err);
     process.exit();
   });
-  autoIncrement.initialize(mongoose.connection);
+
 
 // Use the imported routes
 app.use('/api', movieRoutes);

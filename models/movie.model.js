@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const autoIncrement = require('mongoose-auto-increment');
-
 
 
 const showSchema = new mongoose.Schema({
@@ -16,6 +14,7 @@ const showSchema = new mongoose.Schema({
 });
 
 const MovieSchema = mongoose.Schema({
+  movieid: { type: String, unique: true }, // Add unique constraint to movieid field
   title: String,
   published: Boolean,
   released: Boolean,
@@ -34,8 +33,5 @@ const MovieSchema = mongoose.Schema({
   ],
 });
 
-autoIncrement.initialize(mongoose.connection);
 // Add the auto-increment plugin to the schema
-MovieSchema.plugin(autoIncrement.plugin, { model: 'Movie', field: 'movieid', startAt: 1 });
-
 module.exports = mongoose.model('Movie', MovieSchema);

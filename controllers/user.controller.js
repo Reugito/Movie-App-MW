@@ -58,7 +58,7 @@ exports.signUp = (req, res) => {
 exports.login = (req, res) => {
   const { username, password } = req.body;
   const userValidationSchema = Joi.object({
-    username: Joi.string().required(),
+    username: Joi.string().email().required(),
     password: Joi.string().required(),
   });
 
@@ -68,9 +68,8 @@ exports.login = (req, res) => {
     return res.sendError(400, error.details[0].message);
   }
 
-  console.log(`username ${username} password ${password}`)
   // Find the user by username and password
-  User.findOne({ username:username, password })
+  User.findOne({ email:username, password })
     .then((user) => {
       if (user) {
         // Update the user's isLoggedIn status
@@ -78,8 +77,8 @@ exports.login = (req, res) => {
         user.save();
 
 
-        res.header('access-token', user.accesstoken)
-        res.sendSuccess({ message: 'Login successful','access-token': user.accesstoken, id: user.uuid });
+        res.header('access-token', user.access_token)
+        res.sendSuccess({ message: 'Login successful', id: user.uuid });
       } else {
         
         res.status(401).json({ message: 'Login failed. Invalid username or password.' });
@@ -123,36 +122,18 @@ exports.logout = (req, res) => {
 
 // Get coupon code for a user
 exports.getCouponCode = (req, res) => {
-    const authorizationHeader = req.headers.authorization;
-    const couponCodeToFind = req.query.code; 
+    const { userId } = req.params;
   
-    console.log(`authorizationHeader ${authorizationHeader}  couponCodeToFind ${couponCodeToFind}`)
-    // Step 1: Extract the user ID from the authorization header
-    let token = null
-    if (authorizationHeader) {
-       token = authorizationHeader.split(' ')[1]; // Assuming you're using Bearer token format
-    }else{
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-    if (!token) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    if (couponCodeToFind == "" ) {
-      return res.sendError(400, "Coupon Code Token Not Found")
-    }
-  
-    // Step 2: Find the user by user ID
-    User.findOne({ accesstoken: token })
+    // Find the user by their unique ID
+    User.findOne({ uuid: userId })
       .then((user) => {
         if (user) {
-          // Step 3: Search for the coupon with the specified code
-          const coupon = user.coupens.find((coupon) => coupon.id == couponCodeToFind);
-  
-          if (coupon) {
-            res.status(200).json(coupon);
+          // Check if the user has any coupons
+          if (user.coupens.length > 0) {
+            // Return the first coupon for simplicity
+            res.status(200).json({ coupon: user.coupens[0] });
           } else {
-            res.status(404).json({ message: 'Coupon not found for the specified code' });
+            res.status(404).json({ message: 'No coupons found for the user' });
           }
         } else {
           res.status(404).json({ message: 'User not found' });
@@ -165,37 +146,33 @@ exports.getCouponCode = (req, res) => {
   
   // Book a show for a user
   exports.bookShow = (req, res) => {
-    const { customerUuid, bookingRequest } = req.body;
-
-    const authorizationHeader = req.headers.authorization;
+    const { userId } = req.params;
+    const { showId, tickets } = req.body;
   
-    console.log(`authorizationHeader ${authorizationHeader}`)
-    // Step 1: Extract the user ID from the authorization header
-    let token = null
-    if (authorizationHeader) {
-       token = authorizationHeader.split(' ')[1]; // Assuming you're using Bearer token format
-    }else{
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-    if (!token) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-  
-    console.log(`customerUUid  ${customerUuid}, bookingRequest ${bookingRequest}`)
-    // Find the user by their unique ID and access token
-    User.findOne({ accesstoken: token, uuid: customerUuid })
+    // Find the user by their unique ID
+    User.findOne({ uuid: userId })
       .then((user) => {
         if (user) {
-
-          bookingRequest.reference_number = Math.floor(Math.random() * 1000000)
+          // Assuming you have a Show model or collection
+          // Implement the logic to book a show and update the user's bookingRequests
+          // This is just a placeholder for demonstration purposes
+          // Replace this with your actual booking logic
+  
+          // Example: Booking logic (replace with your actual logic)
+          const booking = {
+            reference_number: Math.floor(Math.random() * 1000000), // Generate a random reference number
+            coupon_code: 101, // Replace with actual coupon code
+            show_id: showId,
+            tickets,
+          };
+  
           // Add the booking request to the user's bookingRequests
-          user.bookingRequests.push(bookingRequest);
+          user.bookingRequests.push(booking);
   
           // Save the updated user
           user.save();
   
-          res.status(201).json({ message: 'Show booked successfully', reference_number:bookingRequest.reference_number});
+          res.status(201).json({ message: 'Show booked successfully', booking });
         } else {
           res.status(404).json({ message: 'User not found' });
         }

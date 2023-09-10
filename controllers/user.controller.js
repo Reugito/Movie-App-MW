@@ -1,7 +1,6 @@
 const User = require('../models/user.model');
-const { v4: uuidv4 } = require('uuid');
+const uuidv4 = require('uuidv4');
 const TokenGenerator = require('uuid-token-generator');
-const Joi = require('joi'); // Import Joi for validation
 
 
 // Create a token generator with a specific secret key
@@ -9,78 +8,46 @@ const tokenGenerator = new TokenGenerator();
 
 // Sign up a new user
 exports.signUp = (req, res) => {
-  const { email_address, first_name, last_name, password, mobile_number } = req.body;
-
-  // Define the validation schema for user registration
-  const userValidationSchema = Joi.object({
-    email_address: Joi.string().email().required(),
-    first_name: Joi.string().required(),
-    last_name: Joi.string().required(),
-    password: Joi.string().required(),
-    mobile_number: Joi.string(), // Optional field
-  });
-
-  // Validate user data against the schema
-  const { error } = userValidationSchema.validate(req.body);
-
-  if (error) {
-    return res.sendError(400, error.details[0].message);
-  }
-
+  const { email, first_name, last_name, password } = req.body;
+  
   // Generate a UUID for the user
   const uuid = uuidv4();
 
   // Create a new user object
   const newUser = new User({
-    first_name,
-    last_name,
-    contact: mobile_number, // Using the provided mobile_number
-    email:email_address, // Using the provided email
-    password,
+    email,
     username: `${first_name}_${last_name}`, // Change this as needed
     uuid,
-    accesstoken: tokenGenerator.generate(uuid), // Assuming tokenGenerator is defined elsewhere
+    access_token: tokenGenerator.generate(uuid),
     isLoggedIn: false,
+    // Add other user properties as needed
   });
 
   // Save the user to the database
   newUser
     .save()
     .then(() => {
-      res.sendSuccess('User created successfully');
+      res.status(201).json({ message: 'User created successfully' });
     })
     .catch((err) => {
-      res.sendError(500,err.message)
+      res.status(500).json({ message: err.message });
     });
 };
 
 // Log in a user
 exports.login = (req, res) => {
   const { username, password } = req.body;
-  const userValidationSchema = Joi.object({
-    username: Joi.string().email().required(),
-    password: Joi.string().required(),
-  });
-
-  // Validate user data against the schema
-  const { error } = userValidationSchema.validate(req.body);
-  if (error) {
-    return res.sendError(400, error.details[0].message);
-  }
 
   // Find the user by username and password
-  User.findOne({ email:username, password })
+  User.findOne({ username, password })
     .then((user) => {
       if (user) {
         // Update the user's isLoggedIn status
         user.isLoggedIn = true;
         user.save();
 
-
-        res.header('access-token', user.access_token)
-        res.sendSuccess({ message: 'Login successful', id: user.uuid });
+        res.status(200).json({ message: 'Login successful', access_token: user.access_token });
       } else {
-        
         res.status(401).json({ message: 'Login failed. Invalid username or password.' });
       }
     })
@@ -91,26 +58,17 @@ exports.login = (req, res) => {
 
 // Log out a user
 exports.logout = (req, res) => {
-  const { uuid } = req.body;
-  const userValidationSchema = Joi.object({
-    uuid: Joi.string().required(),
-  });
-
-  // Validate user data against the schema
-  const { error } = userValidationSchema.validate(req.body);
-  if (error) {
-    return res.sendError(400, error.details[0].message);
-  }
+  const { userId } = req.params;
 
   // Find the user by their unique ID
-  User.findOne({ uuid: uuid })
+  User.findOne({ uuid: userId })
     .then((user) => {
       if (user) {
         // Update the user's isLoggedIn status
         user.isLoggedIn = false;
         user.save();
 
-        res.status(200).json({ message: 'Logged Out successfully.' });
+        res.status(200).json({ message: 'Logout successful' });
       } else {
         res.status(404).json({ message: 'User not found' });
       }
@@ -119,6 +77,9 @@ exports.logout = (req, res) => {
       res.status(500).json({ message: err.message });
     });
 };
+
+
+// ... (previous code)
 
 // Get coupon code for a user
 exports.getCouponCode = (req, res) => {
@@ -181,71 +142,3 @@ exports.getCouponCode = (req, res) => {
         res.status(500).json({ message: err.message });
       });
   };
-
-
-  function addUsers(){
-    User.insertMany([
-      {
-         "userid": 1,
-         "email":"a@b.com", 
-         "first_name": "user1", 
-         "last_name": "user1", 
-         "username":"test",
-         "contact":"9898989898", 
-         "password":"test@123",
-         "role":"user", 
-         "isLoggedIn": false, 
-         "uuid":"5555", 
-         "accesstoken":"66666",
-         "coupens":[
-            {
-               "id":101,discountValue: 101 
-            },
-            {"id":102,discountValue: 102 
-            }
-         ],
-         "bookingRequests":[
-            {
-               "reference_number":29783,
-               "coupon_code":101,show_id: 1003,tickets:[1,3]
-            },
-            {
-               "reference_number":19009,
-               "coupon_code":201,show_id: 1002,tickets:[1]
-            }
-         ]
-      },
-      {
-         "userid": 2,
-         "email":"p@q.com", 
-         "first_name": "user2", 
-         "last_name": "user2", 
-         "username":"user", 
-         "contact":"9898989898", 
-         "password":"user@123",
-         "role":"admin", 
-         "isLoggedIn": false, 
-         "uuid":"11122", 
-         "accesstoken":"2211",
-         "coupens":[
-            {
-               "id":103,discountValue: 103 
-            },
-            {
-               "id":104,discountValue: 104 
-            }
-         ],
-         "bookingRequests":[
-            {
-               "reference_number":29783,
-               "coupon_code":101,show_id: 1003,tickets:[1,3]
-            },
-          {
-               "reference_number":19009,
-               "coupon_code":201,show_id: 1002,tickets:[1]
-            }
-         ]
-      }
-   ])
-  }
-  
